@@ -10,5 +10,7 @@ COPY src ./src
 
 RUN pip install --no-cache-dir .
 
-ENTRYPOINT ["linux-dashboard"]
+EXPOSE 8000
 
+ENTRYPOINT ["linux-dashboard-web"]
+CMD ["--host", "0.0.0.0", "--port", "8000"]

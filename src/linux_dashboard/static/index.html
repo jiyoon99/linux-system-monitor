@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Linux System Monitor</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Linux System Monitor</p>
+          <h1 id="host">Loading</h1>
+          <p id="platform" class="muted">Collecting metrics...</p>
+        </div>
+        <div class="status">
+          <span class="pulse"></span>
+          <span id="updated">Waiting</span>
+        </div>
+      </header>
+
+      <section class="metrics-grid">
+        <article class="metric">
+          <div class="metric-head">
+            <span>CPU</span>
+            <strong id="cpu-percent">0%</strong>
+          </div>
+          <div class="meter"><span id="cpu-bar"></span></div>
+          <dl>
+            <div><dt>Load</dt><dd id="cpu-load">n/a</dd></div>
+            <div><dt>Cores</dt><dd id="cpu-cores">n/a</dd></div>
+            <div><dt>Freq</dt><dd id="cpu-freq">n/a</dd></div>
+          </dl>
+        </article>
+
+        <article class="metric">
+          <div class="metric-head">
+            <span>Memory</span>
+            <strong id="mem-percent">0%</strong>
+          </div>
+          <div class="meter"><span id="mem-bar"></span></div>
+          <dl>
+            <div><dt>Used</dt><dd id="mem-used">n/a</dd></div>
+            <div><dt>Available</dt><dd id="mem-free">n/a</dd></div>
+            <div><dt>Swap</dt><dd id="swap-used">n/a</dd></div>
+          </dl>
+        </article>
+
+        <article class="metric">
+          <div class="metric-head">
+            <span>Network</span>
+            <strong id="net-total">0 B</strong>
+          </div>
+          <dl>
+            <div><dt>Received</dt><dd id="net-recv">n/a</dd></div>
+            <div><dt>Sent</dt><dd id="net-sent">n/a</dd></div>
+            <div><dt>Packets</dt><dd id="net-packets">n/a</dd></div>
+          </dl>
+        </article>
+      </section>
+
+      <section class="split">
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Disks</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Mount</th>
+                  <th>Type</th>
+                  <th>Used</th>
+                  <th>Total</th>
+                  <th>Use</th>
+                </tr>
+              </thead>
+              <tbody id="disks"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Top Processes</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>PID</th>
+                  <th>Name</th>
+                  <th>User</th>
+                  <th>CPU</th>
+                  <th>Mem</th>
+                </tr>
+              </thead>
+              <tbody id="processes"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

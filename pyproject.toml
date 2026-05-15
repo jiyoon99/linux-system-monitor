@@ -9,12 +9,15 @@ description = "A Python CLI dashboard for Linux system monitoring."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "fastapi>=0.115.0",
     "psutil>=5.9.8",
     "rich>=13.7.0",
+    "uvicorn[standard]>=0.30.0",
 ]
 
 [project.scripts]
 linux-dashboard = "linux_dashboard.cli:main"
+linux-dashboard-web = "linux_dashboard.web:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -22,3 +25,5 @@ where = ["src"]
 [tool.setuptools.package-dir]
 "" = "src"
 
+[tool.setuptools.package-data]
+linux_dashboard = ["static/*"]
