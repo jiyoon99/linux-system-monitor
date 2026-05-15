@@ -1,5 +1,7 @@
 # Linux System Monitor
 
+[![CI](https://github.com/jiyoon99/linux-system-monitor/actions/workflows/ci.yml/badge.svg)](https://github.com/jiyoon99/linux-system-monitor/actions/workflows/ci.yml)
+
 FastAPI 기반 Linux 시스템 모니터링 웹 대시보드입니다. CPU, RAM, Disk, Network, Docker 상태를 실시간으로 시각화하고, 로컬 Ollama 모델을 사용해 현재 서버 상태를 AI로 요약 분석합니다.
 
 다크 테마의 hacker/developer 스타일 UI, nginx reverse proxy, Docker Compose 실행 환경, CLI 모니터링 도구를 함께 제공합니다.

@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    name: Compile and Compose checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+
+      - name: Python compile check
+        run: python -m compileall src
+
+      - name: Docker Compose config check
+        run: docker compose config
+
+      - name: Show diagnostics on failure
+        if: failure()
+        run: |
+          echo "Python version:"
+          python --version
+          echo "Docker version:"
+          docker --version
+          echo "Docker Compose version:"
+          docker compose version
+          echo "Git status:"
+          git status --short
+          echo "Docker Compose rendered config:"
+          docker compose config || true
