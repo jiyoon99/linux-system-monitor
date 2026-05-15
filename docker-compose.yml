@@ -1,0 +1,18 @@
+services:
+  linux-dashboard:
+    build: .
+    image: linux-dashboard:latest
+    container_name: linux-dashboard
+    stdin_open: true
+    tty: true
+    pid: host
+    network_mode: host
+    environment:
+      - HOST_PROC=/host/proc
+      - HOST_SYS=/host/sys
+      - HOST_ROOT=/host/root
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro
+

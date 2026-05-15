@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "linux-dashboard"
+version = "0.1.0"
+description = "A Python CLI dashboard for Linux system monitoring."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "psutil>=5.9.8",
+    "rich>=13.7.0",
+]
+
+[project.scripts]
+linux-dashboard = "linux_dashboard.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
