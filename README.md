@@ -63,3 +63,9 @@ Compose 구성은 호스트의 `/proc`, `/sys`, `/`를 읽기 전용으로 마�
 ```bash
 python3 -m compileall src
 ```
+
+Linux Mint GNOME 개발 환경 점검:
+
+```bash
+./check-system.sh
+```
