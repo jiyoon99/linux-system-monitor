@@ -2,27 +2,25 @@
 
 [![CI](https://github.com/jiyoon99/linux-system-monitor/actions/workflows/ci.yml/badge.svg)](https://github.com/jiyoon99/linux-system-monitor/actions/workflows/ci.yml)
 
-FastAPI 기반 Linux 시스템 모니터링 웹 대시보드입니다. CPU, RAM, Disk, Network, Docker 상태를 실시간으로 시각화하고, 로컬 Ollama 모델을 사용해 현재 서버 상태를 AI로 요약 분석합니다.
-
-다크 테마의 hacker/developer 스타일 UI, nginx reverse proxy, Docker Compose 실행 환경, CLI 모니터링 도구를 함께 제공합니다.
+FastAPI, Docker, nginx, Ollama를 활용한 Linux 서버 실시간 모니터링 웹 대시보드입니다.
 
 ## 주요 기능
 
-- CPU, RAM, Disk, Network 실시간 상태 카드
+- CPU, RAM, Disk, Network 실시간 모니터링
 - Chart.js 기반 CPU/RAM/Network history 그래프
-- 디스크 사용률 게이지와 마운트별 상세 표
-- Docker 데몬 상태, 컨테이너 수, 이미지 수 표시
+- Docker 데몬 상태와 컨테이너 상태 표시
 - Server Bot 자동 점검
-  - 중지된 Docker 컨테이너 감지
+  - 중지된 컨테이너 감지
   - CPU/RAM/Disk 임계치 경고
   - `WARN`/`FAIL` 로그 출력
-- Local AI Server 연동
-  - Ollama API 연결 상태 확인
-  - 설치된 모델 목록 표시
-  - `qwen2.5-coder:14b` 기반 시스템 상태 분석
+- Ollama 로컬 AI 서버 연동
+  - Ollama 연결 상태 확인
+  - 설치 모델 목록 표시
+  - 현재 시스템 상태 AI 분석
 - 2초 간격 자동 새로고침
-- 모바일 반응형 대시보드
-- FastAPI 웹 서버와 터미널 CLI 동시 지원
+- 다크 테마 hacker/developer 스타일 UI
+- 모바일 반응형 레이아웃
+- 웹 대시보드와 CLI 동시 지원
 
 ## 기술 스택
 
@@ -31,7 +29,7 @@ FastAPI 기반 Linux 시스템 모니터링 웹 대시보드입니다. CPU, RAM,
 - Jinja2
 - psutil
 - Chart.js
-- Docker / Docker Compose
+- Docker Compose
 - nginx reverse proxy
 - Ollama local LLM API
 - HTML, CSS, JavaScript
@@ -40,66 +38,20 @@ FastAPI 기반 Linux 시스템 모니터링 웹 대시보드입니다. CPU, RAM,
 
 ```text
 Browser
-  |
-  | http://127.0.0.1:8080
-  v
-nginx reverse proxy
-  |
-  | proxy_pass http://host.docker.internal:8000
-  v
-FastAPI app container
-  |
-  | reads /proc, /sys, Docker socket
-  v
-Linux host metrics + Docker Engine
-  |
-  | OLLAMA_BASE_URL=http://localhost:11434
-  v
-Ollama local AI server
+  -> nginx reverse proxy (:8080)
+  -> FastAPI app (:8000, host network)
+  -> Linux host metrics (/proc, /sys)
+  -> Docker Engine (/var/run/docker.sock)
+  -> Ollama API (localhost:11434)
 ```
 
-Docker Compose에서 FastAPI 앱은 Linux `host` network로 실행됩니다. 이 구조 덕분에 호스트에서 `127.0.0.1:11434`로 실행 중인 Ollama API에 컨테이너가 직접 접근할 수 있습니다. nginx는 별도 컨테이너로 유지하며 `host.docker.internal:8000`으로 FastAPI 앱에 reverse proxy 합니다.
+FastAPI 앱은 Docker Compose에서 `network_mode: host`로 실행됩니다. 이 설정으로 컨테이너 내부 앱이 호스트의 Ollama API(`http://localhost:11434`)에 직접 접근합니다.
 
-## 스크린샷
-
-![Linux Dashboard screenshot](docs/screenshots/dashboard.png)
+nginx는 별도 컨테이너로 실행되며 `host.docker.internal:8000`으로 FastAPI 앱에 요청을 전달합니다. 브라우저는 nginx가 공개한 `http://127.0.0.1:8080`으로 접속합니다.
 
 ## 실행 방법
 
-### 1. Ollama 준비
-
-Ollama 설치:
-
-```bash
-curl -fsSL https://ollama.com/install.sh | sh
-```
-
-Ollama 서버 실행:
-
-```bash
-ollama serve
-```
-
-systemd 환경:
-
-```bash
-sudo systemctl enable --now ollama
-sudo systemctl status ollama
-```
-
-분석 모델 다운로드:
-
-```bash
-ollama run qwen2.5-coder:14b
-```
-
-Ollama API 확인:
-
-```bash
-curl http://localhost:11434/api/tags
-```
-
-### 2. Docker Compose 실행
+### Docker Compose
 
 ```bash
 docker compose up -d --build
@@ -116,10 +68,9 @@ http://127.0.0.1:8080
 ```bash
 docker compose ps
 curl http://127.0.0.1:8080/healthz
-curl http://127.0.0.1:8080/api/ollama/status
 ```
 
-### 3. 로컬 개발 실행
+### 로컬 개발
 
 ```bash
 python3 -m venv .venv
@@ -141,44 +92,72 @@ linux-dashboard
 linux-dashboard --once --top 10
 ```
 
-## 주요 설정
+## Docker Compose 설정
 
-`docker-compose.yml`의 app 서비스는 아래 Ollama 설정을 사용합니다.
+핵심 설정:
 
 ```yaml
-network_mode: host
-environment:
-  OLLAMA_BASE_URL: http://localhost:11434
-  OLLAMA_MODEL: qwen2.5-coder:14b
-  OLLAMA_ANALYZE_TIMEOUT: "300"
-  OLLAMA_ANALYZE_NUM_PREDICT: "220"
+services:
+  app:
+    network_mode: host
+    environment:
+      OLLAMA_BASE_URL: http://localhost:11434
+      OLLAMA_MODEL: qwen2.5-coder:14b
+      OLLAMA_ANALYZE_TIMEOUT: "300"
+      OLLAMA_ANALYZE_NUM_PREDICT: "220"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  nginx:
+    ports:
+      - "8080:80"
 ```
 
-Server Bot 임계치는 환경변수로 조정할 수 있습니다.
+## Ollama 연동
+
+Ollama 설치:
 
 ```bash
-BOT_CPU_WARN=80
-BOT_CPU_FAIL=95
-BOT_RAM_WARN=80
-BOT_RAM_FAIL=95
-BOT_DISK_WARN=85
-BOT_DISK_FAIL=95
+curl -fsSL https://ollama.com/install.sh | sh
 ```
+
+Ollama 실행:
+
+```bash
+ollama serve
+```
+
+모델 다운로드:
+
+```bash
+ollama run qwen2.5-coder:14b
+```
+
+API 확인:
+
+```bash
+curl http://localhost:11434/api/tags
+```
+
+대시보드는 `/api/ollama/status`로 연결 상태를 확인하고, `/api/ollama/analyze`에서 현재 CPU/RAM/Disk/Docker 상태를 Ollama에 전달해 짧은 분석 결과를 받습니다.
 
 ## API 엔드포인트
 
 | Method | Endpoint | 설명 |
 | --- | --- | --- |
 | `GET` | `/` | 메인 대시보드 |
-| `GET` | `/healthz` | FastAPI health check |
+| `GET` | `/healthz` | 서버 상태 확인 |
 | `GET` | `/api/snapshot` | 단일 시점 시스템 스냅샷 |
-| `GET` | `/api/metrics` | 현재 metrics와 history 샘플 |
-| `GET` | `/api/alerts` | Server Bot 경고 상태 |
-| `GET` | `/api/ollama/status` | Ollama 연결 상태와 기본 모델 상태 |
-| `GET` | `/api/ollama/models` | Ollama 설치 모델 목록 |
-| `POST` | `/api/ollama/analyze` | 현재 시스템 상태 AI 분석 |
+| `GET` | `/api/metrics` | 현재 metrics와 history |
+| `GET` | `/api/alerts` | Server Bot 경고 |
+| `GET` | `/api/ollama/status` | Ollama 연결 상태 |
+| `GET` | `/api/ollama/models` | Ollama 모델 목록 |
+| `POST` | `/api/ollama/analyze` | AI 시스템 분석 |
 
-AI 분석 API 예시:
+AI 분석 요청:
 
 ```bash
 curl -X POST http://127.0.0.1:8080/api/ollama/analyze \
@@ -199,8 +178,6 @@ curl http://127.0.0.1:8080/api/ollama/status
 
 ### Ollama server offline
 
-호스트에서 Ollama가 실행 중인지 확인합니다.
-
 ```bash
 curl http://localhost:11434/api/tags
 ollama serve
@@ -215,21 +192,17 @@ sudo systemctl status ollama
 
 ### model not found
 
-기본 분석 모델을 내려받습니다.
-
 ```bash
 ollama run qwen2.5-coder:14b
 ```
 
 ### connection refused
 
-호스트에서 먼저 확인합니다.
+호스트에서 Ollama API가 응답하는지 먼저 확인합니다.
 
 ```bash
 curl http://localhost:11434/api/tags
 ```
-
-이 프로젝트의 Compose 구성은 app 컨테이너를 host network로 실행하므로, 호스트에서 위 명령이 성공하면 app도 `http://localhost:11434`로 접근할 수 있습니다.
 
 host network를 사용할 수 없는 환경에서는 `OLLAMA_BASE_URL`을 접근 가능한 IP로 변경합니다.
 
@@ -240,7 +213,7 @@ environment:
 
 ### AI 분석이 느림
 
-`qwen2.5-coder:14b`는 CPU 환경에서 느릴 수 있습니다. 응답 길이를 줄이거나 더 작은 모델을 사용합니다.
+14B 모델은 CPU 환경에서 느릴 수 있습니다. 응답 길이를 줄이거나 더 작은 모델을 사용합니다.
 
 ```yaml
 environment:
@@ -250,15 +223,13 @@ environment:
 
 ### nginx 502 또는 504
 
-nginx upstream과 timeout 설정을 확인합니다.
-
 ```bash
-cat nginx/default.conf
 docker compose logs nginx
 docker compose logs app
+cat nginx/default.conf
 ```
 
-현재 nginx는 `host.docker.internal:8000`으로 FastAPI 앱에 연결합니다.
+현재 nginx upstream은 `host.docker.internal:8000`입니다.
 
 ### Docker 상태가 degraded
 
@@ -269,15 +240,13 @@ volumes:
   - /var/run/docker.sock:/var/run/docker.sock:ro
 ```
 
-소켓 접근 권한이 없으면 Docker 섹션만 degraded로 표시되고 CPU/RAM/Disk metrics는 계속 갱신됩니다.
-
 ## 향후 개선 계획
 
-- AI 분석 결과 캐싱과 최근 분석 히스토리 저장
+- AI 분석 결과 캐싱
+- 최근 분석 히스토리 저장
 - Server Bot alert acknowledge 기능
-- Docker 컨테이너별 CPU/RAM 상세 모니터링
-- Prometheus/Grafana export endpoint 추가
-- 사용자 설정 UI에서 임계치 조정
+- 컨테이너별 CPU/RAM 상세 모니터링
+- Prometheus/Grafana export endpoint
 - WebSocket 기반 push 업데이트
-- GitHub Actions 기반 lint/test/build 자동화
-- 실제 운영 서버 배포 예제 추가
+- GitHub Actions 테스트 범위 확대
+- 운영 서버 배포 예제 추가
