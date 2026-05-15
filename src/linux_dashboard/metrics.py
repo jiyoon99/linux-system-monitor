@@ -4,6 +4,13 @@ from dataclasses import dataclass
 from datetime import datetime
 import os
 import platform
+import shutil
+import socket
+import subprocess
+import http.client
+import json
+import urllib.error
+import urllib.request
 from typing import Iterable
 
 import psutil
@@ -62,6 +69,26 @@ class ProcessMetrics:
 
 
 @dataclass(frozen=True)
+class DockerContainerMetrics:
+    id: str
+    name: str
+    image: str
+    status: str
+    state: str
+
+
+@dataclass(frozen=True)
+class DockerMetrics:
+    status: str
+    message: str
+    version: str | None
+    containers: int | None
+    containers_running: int | None
+    images: int | None
+    stopped: list[DockerContainerMetrics]
+
+
+@dataclass(frozen=True)
 class SystemSnapshot:
     timestamp: datetime
     hostname: str
@@ -71,6 +98,7 @@ class SystemSnapshot:
     memory: MemoryMetrics
     disks: list[DiskMetrics]
     network: NetworkMetrics
+    docker: DockerMetrics
     processes: list[ProcessMetrics]
 
 
@@ -84,6 +112,7 @@ def collect_snapshot(top_processes: int = 8) -> SystemSnapshot:
         memory=_memory_metrics(),
         disks=list(_disk_metrics()),
         network=_network_metrics(),
+        docker=_docker_metrics(),
         processes=_process_metrics(top_processes),
     )
 
@@ -160,6 +189,223 @@ def _network_metrics() -> NetworkMetrics:
         packets_sent=counters.packets_sent,
         packets_recv=counters.packets_recv,
     )
+
+
+def _docker_metrics() -> DockerMetrics:
+    if shutil.which("docker") is None:
+        socket_metrics = _docker_socket_metrics()
+        if socket_metrics:
+            return socket_metrics
+        return DockerMetrics(
+            status="not_installed",
+            message="Docker CLI 또는 Docker 소켓을 찾을 수 없습니다.",
+            version=None,
+            containers=None,
+            containers_running=None,
+            images=None,
+            stopped=[],
+        )
+
+    try:
+        result = subprocess.run(
+            [
+                "docker",
+                "info",
+                "--format",
+                "{{.ServerVersion}}\t{{.Containers}}\t{{.ContainersRunning}}\t{{.Images}}",
+            ],
+            capture_output=True,
+            check=True,
+            text=True,
+            timeout=2,
+        )
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as exc:
+        message = str(exc)
+        if isinstance(exc, subprocess.CalledProcessError) and exc.stderr:
+            message = exc.stderr.strip()
+        return DockerMetrics(
+            status="unavailable",
+            message=message or "Docker 상태를 확인할 수 없습니다.",
+            version=None,
+            containers=None,
+            containers_running=None,
+            images=None,
+            stopped=[],
+        )
+
+    fields = result.stdout.strip().split("\t")
+    if len(fields) != 4:
+        return DockerMetrics(
+            status="unavailable",
+            message="Docker 응답 형식을 해석할 수 없습니다.",
+            version=None,
+            containers=None,
+            containers_running=None,
+            images=None,
+            stopped=[],
+        )
+
+    version, containers, running, images = fields
+    return DockerMetrics(
+        status="running",
+        message="Docker 데몬이 응답 중입니다.",
+        version=version or None,
+        containers=_int_or_none(containers),
+        containers_running=_int_or_none(running),
+        images=_int_or_none(images),
+        stopped=_docker_cli_stopped_containers(),
+    )
+
+
+def _docker_socket_metrics() -> DockerMetrics | None:
+    socket_path = os.environ.get("DOCKER_HOST_SOCKET", "/var/run/docker.sock")
+    if not os.path.exists(socket_path):
+        return None
+
+    opener = urllib.request.build_opener(_UnixSocketHandler(socket_path))
+    try:
+        with opener.open("http://docker/info", timeout=2) as response:
+            payload = response.read()
+    except (OSError, urllib.error.URLError, TimeoutError) as exc:
+        return DockerMetrics(
+            status="unavailable",
+            message=f"Docker 소켓에 연결할 수 없습니다: {exc}",
+            version=None,
+            containers=None,
+            containers_running=None,
+            images=None,
+            stopped=[],
+        )
+
+    try:
+        info = json.loads(payload.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError) as exc:
+        return DockerMetrics(
+            status="unavailable",
+            message=f"Docker 응답을 해석할 수 없습니다: {exc}",
+            version=None,
+            containers=None,
+            containers_running=None,
+            images=None,
+            stopped=[],
+        )
+
+    return DockerMetrics(
+        status="running",
+        message="Docker 소켓이 응답 중입니다.",
+        version=info.get("ServerVersion"),
+        containers=info.get("Containers"),
+        containers_running=info.get("ContainersRunning"),
+        images=info.get("Images"),
+        stopped=_docker_socket_stopped_containers(socket_path),
+    )
+
+
+def _docker_cli_stopped_containers() -> list[DockerContainerMetrics]:
+    try:
+        result = subprocess.run(
+            [
+                "docker",
+                "ps",
+                "-a",
+                "--filter",
+                "status=exited",
+                "--filter",
+                "status=created",
+                "--filter",
+                "status=dead",
+                "--format",
+                "{{.ID}}\t{{.Names}}\t{{.Image}}\t{{.Status}}\t{{.State}}",
+            ],
+            capture_output=True,
+            check=True,
+            text=True,
+            timeout=2,
+        )
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError):
+        return []
+
+    containers: list[DockerContainerMetrics] = []
+    for line in result.stdout.splitlines():
+        fields = line.split("\t")
+        if len(fields) != 5:
+            continue
+        container_id, name, image, status, state = fields
+        containers.append(
+            DockerContainerMetrics(
+                id=container_id,
+                name=name,
+                image=image,
+                status=status,
+                state=state,
+            )
+        )
+    return containers
+
+
+def _docker_socket_stopped_containers(socket_path: str) -> list[DockerContainerMetrics]:
+    containers = _docker_socket_json(socket_path, "http://docker/containers/json?all=1")
+    if not isinstance(containers, list):
+        return []
+
+    stopped: list[DockerContainerMetrics] = []
+    for item in containers:
+        state = str(item.get("State") or "unknown")
+        if state == "running":
+            continue
+        names = item.get("Names") or []
+        name = str(names[0]).lstrip("/") if names else str(item.get("Id") or "unknown")[:12]
+        stopped.append(
+            DockerContainerMetrics(
+                id=str(item.get("Id") or "")[:12],
+                name=name,
+                image=str(item.get("Image") or "unknown"),
+                status=str(item.get("Status") or state),
+                state=state,
+            )
+        )
+    return stopped
+
+
+def _docker_socket_json(socket_path: str, url: str):
+    opener = urllib.request.build_opener(_UnixSocketHandler(socket_path))
+    try:
+        with opener.open(url, timeout=2) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except (OSError, urllib.error.URLError, TimeoutError, UnicodeDecodeError, ValueError):
+        return None
+
+
+class _UnixSocketHTTPConnection(http.client.HTTPConnection):
+    def __init__(self, host: str, socket_path: str, timeout=socket._GLOBAL_DEFAULT_TIMEOUT) -> None:
+        super().__init__(host, timeout=timeout)
+        self.socket_path = socket_path
+
+    def connect(self) -> None:
+        self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        if self.timeout is not socket._GLOBAL_DEFAULT_TIMEOUT:
+            self.sock.settimeout(self.timeout)
+        self.sock.connect(self.socket_path)
+
+
+class _UnixSocketHTTPHandler(urllib.request.HTTPHandler):
+    def __init__(self, socket_path: str) -> None:
+        super().__init__()
+        self.socket_path = socket_path
+
+    def http_open(self, req):
+        return self.do_open(lambda host, timeout=0: _UnixSocketHTTPConnection(host, self.socket_path, timeout), req)
+
+
+def _UnixSocketHandler(socket_path: str) -> _UnixSocketHTTPHandler:
+    return _UnixSocketHTTPHandler(socket_path)
+
+
+def _int_or_none(value: str) -> int | None:
+    try:
+        return int(value)
+    except ValueError:
+        return None
 
 
 def _process_metrics(limit: int) -> list[ProcessMetrics]:

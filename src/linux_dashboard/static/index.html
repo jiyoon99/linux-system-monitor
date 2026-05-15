@@ -3,20 +3,21 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Linux System Monitor</title>
+    <title>Linux System Dashboard</title>
     <link rel="stylesheet" href="/static/styles.css" />
   </head>
   <body>
     <main class="shell">
       <header class="topbar">
         <div>
-          <p class="eyebrow">Linux System Monitor</p>
-          <h1 id="host">Loading</h1>
-          <p id="platform" class="muted">Collecting metrics...</p>
+          <p class="eyebrow">System overview</p>
+          <h1>Linux System Dashboard</h1>
+          <p id="host" class="host-name">데이터 수집 중</p>
+          <p id="platform" class="muted">데이터 수집 중</p>
         </div>
         <div class="status">
           <span class="pulse"></span>
-          <span id="updated">Waiting</span>
+          <span id="updated">데이터 수집 중</span>
         </div>
       </header>
 
@@ -24,56 +25,92 @@
         <article class="metric">
           <div class="metric-head">
             <span>CPU</span>
-            <strong id="cpu-percent">0%</strong>
+            <strong id="cpu-percent">데이터 수집 중</strong>
           </div>
+          <p class="metric-copy">프로그램을 실행하고 계산하는 중앙 처리 장치 사용률입니다.</p>
           <div class="meter"><span id="cpu-bar"></span></div>
           <dl>
-            <div><dt>Load</dt><dd id="cpu-load">n/a</dd></div>
-            <div><dt>Cores</dt><dd id="cpu-cores">n/a</dd></div>
-            <div><dt>Freq</dt><dd id="cpu-freq">n/a</dd></div>
+            <div><dt>부하</dt><dd id="cpu-load">데이터 수집 중</dd></div>
+            <div><dt>코어</dt><dd id="cpu-cores">데이터 수집 중</dd></div>
+            <div><dt>속도</dt><dd id="cpu-freq">데이터 수집 중</dd></div>
           </dl>
         </article>
 
         <article class="metric">
           <div class="metric-head">
-            <span>Memory</span>
-            <strong id="mem-percent">0%</strong>
+            <span>RAM</span>
+            <strong id="mem-percent">데이터 수집 중</strong>
           </div>
+          <p class="metric-copy">현재 실행 중인 앱과 서비스가 사용하는 메모리 상태입니다.</p>
           <div class="meter"><span id="mem-bar"></span></div>
           <dl>
-            <div><dt>Used</dt><dd id="mem-used">n/a</dd></div>
-            <div><dt>Available</dt><dd id="mem-free">n/a</dd></div>
-            <div><dt>Swap</dt><dd id="swap-used">n/a</dd></div>
+            <div><dt>사용 중</dt><dd id="mem-used">데이터 수집 중</dd></div>
+            <div><dt>사용 가능</dt><dd id="mem-free">데이터 수집 중</dd></div>
+            <div><dt>스왑</dt><dd id="swap-used">데이터 수집 중</dd></div>
+          </dl>
+        </article>
+
+        <article class="metric">
+          <div class="metric-head">
+            <span>Disk</span>
+            <strong id="disk-percent">데이터 수집 중</strong>
+          </div>
+          <p class="metric-copy">파일과 Docker 이미지가 저장되는 디스크 공간 사용량입니다.</p>
+          <div class="meter"><span id="disk-bar"></span></div>
+          <dl>
+            <div><dt>사용 중</dt><dd id="disk-used">데이터 수집 중</dd></div>
+            <div><dt>전체 용량</dt><dd id="disk-total">데이터 수집 중</dd></div>
+            <div><dt>마운트</dt><dd id="disk-count">데이터 수집 중</dd></div>
           </dl>
         </article>
 
         <article class="metric">
           <div class="metric-head">
             <span>Network</span>
-            <strong id="net-total">0 B</strong>
+            <strong id="net-total">데이터 수집 중</strong>
           </div>
+          <p class="metric-copy">서버가 주고받은 네트워크 트래픽 누적량입니다.</p>
           <dl>
-            <div><dt>Received</dt><dd id="net-recv">n/a</dd></div>
-            <div><dt>Sent</dt><dd id="net-sent">n/a</dd></div>
-            <div><dt>Packets</dt><dd id="net-packets">n/a</dd></div>
+            <div><dt>받음</dt><dd id="net-recv">데이터 수집 중</dd></div>
+            <div><dt>보냄</dt><dd id="net-sent">데이터 수집 중</dd></div>
+            <div><dt>패킷</dt><dd id="net-packets">데이터 수집 중</dd></div>
           </dl>
+        </article>
+      </section>
+
+      <section class="docker-section">
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Docker 상태</h2>
+              <p class="panel-copy">컨테이너 실행 환경이 정상적으로 응답하는지 확인합니다.</p>
+            </div>
+            <span id="docker-status" class="state-badge">데이터 수집 중</span>
+          </div>
+          <dl class="docker-grid">
+            <div><dt>버전</dt><dd id="docker-version">데이터 수집 중</dd></div>
+            <div><dt>실행 중 컨테이너</dt><dd id="docker-running">데이터 수집 중</dd></div>
+            <div><dt>전체 컨테이너</dt><dd id="docker-containers">데이터 수집 중</dd></div>
+            <div><dt>이미지</dt><dd id="docker-images">데이터 수집 중</dd></div>
+          </dl>
+          <p id="docker-message" class="docker-message">데이터 수집 중</p>
         </article>
       </section>
 
       <section class="split">
         <article class="panel">
           <div class="panel-head">
-            <h2>Disks</h2>
+            <h2>디스크 상세</h2>
           </div>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Mount</th>
-                  <th>Type</th>
-                  <th>Used</th>
-                  <th>Total</th>
-                  <th>Use</th>
+                  <th>마운트</th>
+                  <th>형식</th>
+                  <th>사용 중</th>
+                  <th>전체</th>
+                  <th>사용률</th>
                 </tr>
               </thead>
               <tbody id="disks"></tbody>
@@ -83,15 +120,15 @@
 
         <article class="panel">
           <div class="panel-head">
-            <h2>Top Processes</h2>
+            <h2>상위 프로세스</h2>
           </div>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
                   <th>PID</th>
-                  <th>Name</th>
-                  <th>User</th>
+                  <th>이름</th>
+                  <th>사용자</th>
                   <th>CPU</th>
                   <th>Mem</th>
                 </tr>

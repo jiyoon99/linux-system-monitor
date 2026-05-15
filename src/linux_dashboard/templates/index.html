@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div class="identity">
+          <p class="eyebrow">root@linux-dashboard:~$ watch systemctl status</p>
+          <h1>{{ title }}</h1>
+          <p id="host" class="host-name">데이터 수집 중</p>
+          <p id="platform" class="muted">데이터 수집 중</p>
+        </div>
+        <div class="status-stack" aria-live="polite">
+          <div class="status">
+            <span class="pulse"></span>
+            <span id="updated">데이터 수집 중</span>
+          </div>
+          <span class="refresh-pill">auto {{ refresh_interval_ms // 1000 }}.{{ (refresh_interval_ms % 1000) // 100 }}s</span>
+        </div>
+      </header>
+
+      <section class="metrics-grid" aria-label="시스템 상태 요약">
+        <article class="metric">
+          <div class="metric-head">
+            <span>CPU</span>
+            <strong id="cpu-percent">데이터 수집 중</strong>
+          </div>
+          <p class="metric-copy">load, core, clock telemetry</p>
+          <div class="meter"><span id="cpu-bar"></span></div>
+          <dl>
+            <div><dt>load</dt><dd id="cpu-load">데이터 수집 중</dd></div>
+            <div><dt>cores</dt><dd id="cpu-cores">데이터 수집 중</dd></div>
+            <div><dt>clock</dt><dd id="cpu-freq">데이터 수집 중</dd></div>
+          </dl>
+        </article>
+
+        <article class="metric">
+          <div class="metric-head">
+            <span>RAM</span>
+            <strong id="mem-percent">데이터 수집 중</strong>
+          </div>
+          <p class="metric-copy">memory and swap pressure</p>
+          <div class="meter"><span id="mem-bar"></span></div>
+          <dl>
+            <div><dt>used</dt><dd id="mem-used">데이터 수집 중</dd></div>
+            <div><dt>free</dt><dd id="mem-free">데이터 수집 중</dd></div>
+            <div><dt>swap</dt><dd id="swap-used">데이터 수집 중</dd></div>
+          </dl>
+        </article>
+
+        <article class="metric">
+          <div class="metric-head">
+            <span>Disk</span>
+            <strong id="disk-percent">데이터 수집 중</strong>
+          </div>
+          <p class="metric-copy">mounted filesystem usage</p>
+          <div class="meter"><span id="disk-bar"></span></div>
+          <dl>
+            <div><dt>used</dt><dd id="disk-used">데이터 수집 중</dd></div>
+            <div><dt>total</dt><dd id="disk-total">데이터 수집 중</dd></div>
+            <div><dt>mounts</dt><dd id="disk-count">데이터 수집 중</dd></div>
+          </dl>
+        </article>
+
+        <article class="metric">
+          <div class="metric-head">
+            <span>Network</span>
+            <strong id="net-total">데이터 수집 중</strong>
+          </div>
+          <p class="metric-copy">cumulative packet I/O</p>
+          <dl>
+            <div><dt>down</dt><dd id="net-recv">데이터 수집 중</dd></div>
+            <div><dt>up</dt><dd id="net-sent">데이터 수집 중</dd></div>
+            <div><dt>packets</dt><dd id="net-packets">데이터 수집 중</dd></div>
+          </dl>
+        </article>
+      </section>
+
+      <section class="docker-section">
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Docker Runtime</h2>
+              <p class="panel-copy">daemon, container, image inventory</p>
+            </div>
+            <span id="docker-status" class="state-badge">데이터 수집 중</span>
+          </div>
+          <dl class="docker-grid">
+            <div><dt>version</dt><dd id="docker-version">데이터 수집 중</dd></div>
+            <div><dt>running</dt><dd id="docker-running">데이터 수집 중</dd></div>
+            <div><dt>containers</dt><dd id="docker-containers">데이터 수집 중</dd></div>
+            <div><dt>images</dt><dd id="docker-images">데이터 수집 중</dd></div>
+          </dl>
+          <p id="docker-message" class="docker-message">데이터 수집 중</p>
+        </article>
+      </section>
+
+      <section class="bot-section" aria-label="자동 서버 관리 봇">
+        <article class="panel server-bot-panel">
+          <div class="panel-head">
+            <div>
+              <h2>Server Bot</h2>
+              <p class="panel-copy">threshold checks, Docker watchdog, terminal WARN/FAIL logs</p>
+            </div>
+            <span id="bot-status" class="state-badge">데이터 수집 중</span>
+          </div>
+          <div class="bot-body">
+            <div class="bot-summary">
+              <strong id="bot-summary">데이터 수집 중</strong>
+              <span id="bot-updated">데이터 수집 중</span>
+            </div>
+            <div class="bot-columns">
+              <div>
+                <h3>Alerts</h3>
+                <ul id="bot-alerts" class="bot-list">
+                  <li>데이터 수집 중</li>
+                </ul>
+              </div>
+              <div>
+                <h3>Stopped Containers</h3>
+                <ul id="bot-stopped" class="bot-list">
+                  <li>데이터 수집 중</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="local-ai-section" aria-label="로컬 AI 서버 상태">
+        <article class="panel local-ai-panel">
+          <div class="panel-head">
+            <div>
+              <h2>Local AI Server</h2>
+              <p class="panel-copy">Ollama runtime, installed models, qwen2.5-coder analysis</p>
+            </div>
+            <span id="ollama-status" class="state-badge">데이터 수집 중</span>
+          </div>
+          <div class="local-ai-body">
+            <dl class="local-ai-grid">
+              <div><dt>CLI</dt><dd id="ollama-cli">데이터 수집 중</dd></div>
+              <div><dt>Server</dt><dd id="ollama-server">데이터 수집 중</dd></div>
+              <div><dt>Version</dt><dd id="ollama-version">데이터 수집 중</dd></div>
+              <div><dt>Coder Model</dt><dd id="ollama-required">데이터 수집 중</dd></div>
+            </dl>
+            <div class="local-ai-models">
+              <div class="local-ai-models-head">
+                <h3>Installed Models</h3>
+                <span id="ollama-base-url">데이터 수집 중</span>
+              </div>
+              <ul id="ollama-models" class="bot-list">
+                <li>데이터 수집 중</li>
+              </ul>
+            </div>
+            <p id="ollama-message" class="docker-message">데이터 수집 중</p>
+            <div class="ai-analysis">
+              <div class="local-ai-models-head">
+                <h3>AI Analysis</h3>
+                <button id="ollama-analyze" type="button" class="action-button">Analyze System</button>
+              </div>
+              <pre id="ollama-analysis">데이터 수집 중</pre>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="charts-grid" aria-label="실시간 히스토리 그래프">
+        <article class="panel chart-panel">
+          <div class="panel-head">
+            <div>
+              <h2>CPU History</h2>
+              <p class="panel-copy">usage percent over recent samples</p>
+            </div>
+            <span id="cpu-chart-latest" class="chart-latest">데이터 수집 중</span>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="cpu-chart"></canvas>
+            <div id="cpu-chart-empty" class="chart-empty">데이터 수집 중</div>
+          </div>
+        </article>
+
+        <article class="panel chart-panel">
+          <div class="panel-head">
+            <div>
+              <h2>RAM History</h2>
+              <p class="panel-copy">memory pressure over recent samples</p>
+            </div>
+            <span id="ram-chart-latest" class="chart-latest">데이터 수집 중</span>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="ram-chart"></canvas>
+            <div id="ram-chart-empty" class="chart-empty">데이터 수집 중</div>
+          </div>
+        </article>
+
+        <article class="panel chart-panel">
+          <div class="panel-head">
+            <div>
+              <h2>Network History</h2>
+              <p class="panel-copy">receive and transmit throughput</p>
+            </div>
+            <span id="net-chart-latest" class="chart-latest">데이터 수집 중</span>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="network-chart"></canvas>
+            <div id="network-chart-empty" class="chart-empty">데이터 수집 중</div>
+          </div>
+        </article>
+
+        <article class="panel chart-panel disk-gauge-panel">
+          <div class="panel-head">
+            <div>
+              <h2>Disk Usage</h2>
+              <p class="panel-copy">current aggregate mounted usage</p>
+            </div>
+            <span id="disk-chart-latest" class="chart-latest">데이터 수집 중</span>
+          </div>
+          <div class="disk-gauge">
+            <div class="disk-gauge-track">
+              <span id="disk-gauge-fill"></span>
+            </div>
+            <div class="disk-gauge-meta">
+              <strong id="disk-gauge-percent">데이터 수집 중</strong>
+              <span id="disk-gauge-detail">데이터 수집 중</span>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="split">
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Mount Table</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>mount</th>
+                  <th>fs</th>
+                  <th>used</th>
+                  <th>total</th>
+                  <th>usage</th>
+                </tr>
+              </thead>
+              <tbody id="disks"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Hot Processes</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>pid</th>
+                  <th>name</th>
+                  <th>user</th>
+                  <th>cpu</th>
+                  <th>mem</th>
+                </tr>
+              </thead>
+              <tbody id="processes"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+    </main>
+    <script>
+      window.dashboardConfig = {
+        refreshInterval: {{ refresh_interval_ms }},
+        topProcesses: {{ top_processes }},
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
