@@ -105,7 +105,7 @@ class SystemSnapshot:
 def collect_snapshot(top_processes: int = 8) -> SystemSnapshot:
     return SystemSnapshot(
         timestamp=datetime.now(),
-        hostname=platform.node() or "unknown",
+        hostname=_hostname(),
         platform=_platform_label(),
         uptime_seconds=datetime.now().timestamp() - psutil.boot_time(),
         cpu=_cpu_metrics(),
@@ -120,6 +120,20 @@ def collect_snapshot(top_processes: int = 8) -> SystemSnapshot:
 def _platform_label() -> str:
     parts = [platform.system(), platform.release(), platform.machine()]
     return " ".join(part for part in parts if part)
+
+
+def _hostname() -> str:
+    host_root = os.environ.get("HOST_ROOT")
+    if host_root:
+        hostname_path = os.path.join(host_root, "etc", "hostname")
+        try:
+            with open(hostname_path, encoding="utf-8") as handle:
+                hostname = handle.read().strip()
+                if hostname:
+                    return hostname
+        except OSError:
+            pass
+    return platform.node() or "unknown"
 
 
 def _cpu_metrics() -> CpuMetrics:
@@ -154,6 +168,22 @@ def _memory_metrics() -> MemoryMetrics:
 
 
 def _disk_metrics() -> Iterable[DiskMetrics]:
+    host_root = os.environ.get("HOST_ROOT")
+    if host_root:
+        try:
+            usage = psutil.disk_usage(host_root)
+        except (PermissionError, OSError):
+            return
+        yield DiskMetrics(
+            mountpoint="/",
+            fstype="host-root",
+            total=usage.total,
+            used=usage.used,
+            free=usage.free,
+            percent=usage.percent,
+        )
+        return
+
     seen: set[str] = set()
     for partition in psutil.disk_partitions(all=False):
         if partition.mountpoint in seen:

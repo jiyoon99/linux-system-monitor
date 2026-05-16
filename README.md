@@ -39,15 +39,15 @@ FastAPI, Docker, nginx, Ollama를 활용한 Linux 서버 실시간 모니터링 
 ```text
 Browser
   -> nginx reverse proxy (:8080)
-  -> FastAPI app (:8000, host network)
+  -> FastAPI app (:18000, host network)
   -> Linux host metrics (/proc, /sys)
   -> Docker Engine (/var/run/docker.sock)
   -> Ollama API (localhost:11434)
 ```
 
-FastAPI 앱은 Docker Compose에서 `network_mode: host`로 실행됩니다. 이 설정으로 컨테이너 내부 앱이 호스트의 Ollama API(`http://localhost:11434`)에 직접 접근합니다.
+FastAPI 앱과 nginx는 Docker Compose에서 `network_mode: host`로 실행됩니다. FastAPI 앱은 Portainer의 8000 포트와 충돌하지 않도록 호스트의 `18000` 포트에 바인딩됩니다.
 
-nginx는 별도 컨테이너로 실행되며 `host.docker.internal:8000`으로 FastAPI 앱에 요청을 전달합니다. 브라우저는 nginx가 공개한 `http://127.0.0.1:8080`으로 접속합니다.
+nginx는 별도 컨테이너로 실행되며 `127.0.0.1:18000`으로 FastAPI 앱에 요청을 전달합니다. 브라우저는 nginx가 공개한 `http://127.0.0.1:8080`으로 접속합니다. Ollama는 호스트 네트워크의 `http://localhost:11434`로 접근합니다.
 
 ## 실행 방법
 
@@ -105,6 +105,7 @@ services:
       OLLAMA_MODEL: qwen2.5-coder:14b
       OLLAMA_ANALYZE_TIMEOUT: "300"
       OLLAMA_ANALYZE_NUM_PREDICT: "220"
+    command: ["--host", "0.0.0.0", "--port", "18000"]
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -112,8 +113,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
   nginx:
-    ports:
-      - "8080:80"
+    network_mode: host
 ```
 
 ## Ollama 연동
@@ -204,7 +204,7 @@ ollama run qwen2.5-coder:14b
 curl http://localhost:11434/api/tags
 ```
 
-host network를 사용할 수 없는 환경에서는 `OLLAMA_BASE_URL`을 접근 가능한 IP로 변경합니다.
+host network를 사용할 수 없는 환경에서는 `OLLAMA_BASE_URL`을 접근 가능한 호스트 IP로 변경하고 nginx upstream도 함께 조정합니다.
 
 ```yaml
 environment:
@@ -229,7 +229,7 @@ docker compose logs app
 cat nginx/default.conf
 ```
 
-현재 nginx upstream은 `host.docker.internal:8000`입니다.
+현재 nginx upstream은 `127.0.0.1:18000`입니다.
 
 ### Docker 상태가 degraded
 
