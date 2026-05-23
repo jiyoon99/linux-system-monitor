@@ -23,6 +23,25 @@ FastAPI, Docker, nginx, Chart.js, Ollama를 조합해 만든 Linux 서버 실시
 - 다크 테마 반응형 UI
 - 웹 대시보드와 CLI 동시 지원
 
+## For Interviewers
+
+이 저장소는 Linux 서버 상태를 "명령어 여러 개"가 아니라 하나의 운영 화면에서 판단하도록 만든 프로젝트입니다.
+
+| 평가 포인트 | 확인 위치 |
+| --- | --- |
+| Linux metrics 수집 | `src/linux_dashboard/metrics.py`, `/proc`, `/sys`, disk/network 정보 |
+| Docker 운영 상태 확인 | Docker socket mount, container/image 상태 API |
+| 웹 서비스 구성 | FastAPI app, nginx reverse proxy, Docker Compose |
+| 운영 판단 로직 | Server Bot `OK`/`WARN`/`FAIL` 리포트 |
+| AI 연동 | Ollama 상태 확인과 현재 시스템 상태 분석 API |
+
+면접에서 설명할 수 있는 핵심은 다음과 같습니다.
+
+- 컨테이너 안에서 호스트의 `/proc`, `/sys`, Docker socket을 읽을 때 어떤 권한과 mount가 필요한지
+- 단순 수치 표시와 운영자가 바로 판단할 수 있는 alert/report의 차이
+- nginx를 앞에 두고 FastAPI 앱을 내부 포트로 분리한 이유
+- Ollama가 느리거나 꺼져 있을 때 대시보드 전체가 멈추지 않도록 상태 API를 나눈 방식
+
 ## Why I Built This
 
 개인 Linux 개발 환경에서 Docker, Ollama, 시스템 리소스 상태를 매번 여러 명령어로 확인하는 불편함을 줄이기 위해 만들었습니다.
