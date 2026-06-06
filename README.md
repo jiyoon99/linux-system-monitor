@@ -6,7 +6,7 @@ FastAPI, Docker, nginx, Chart.js, Ollama를 조합해 만든 Linux 서버 실시
 
 ![Dashboard screenshot](docs/screenshots/dashboard.png)
 
-## Project Highlights
+## Project Highlights / 프로젝트 핵심
 
 - 실시간 CPU, RAM, Disk, Network 모니터링
 - Chart.js 기반 CPU/RAM/Network 히스토리 그래프
@@ -23,7 +23,7 @@ FastAPI, Docker, nginx, Chart.js, Ollama를 조합해 만든 Linux 서버 실시
 - 다크 테마 반응형 UI
 - 웹 대시보드와 CLI 동시 지원
 
-## For Interviewers
+## For Interviewers / 면접관 참고
 
 이 저장소는 Linux 서버 상태를 "명령어 여러 개"가 아니라 하나의 운영 화면에서 판단하도록 만든 프로젝트입니다.
 
@@ -42,7 +42,7 @@ FastAPI, Docker, nginx, Chart.js, Ollama를 조합해 만든 Linux 서버 실시
 - nginx를 앞에 두고 FastAPI 앱을 내부 포트로 분리한 이유
 - Ollama가 느리거나 꺼져 있을 때 대시보드 전체가 멈추지 않도록 상태 API를 나눈 방식
 
-## Why I Built This
+## Why I Built This / 제작 배경
 
 개인 Linux 개발 환경에서 Docker, Ollama, 시스템 리소스 상태를 매번 여러 명령어로 확인하는 불편함을 줄이기 위해 만들었습니다.
 
@@ -53,7 +53,7 @@ FastAPI, Docker, nginx, Chart.js, Ollama를 조합해 만든 Linux 서버 실시
 - 리소스 수치만 보고 판단해야 하는 운영 피로도
 - 로컬 AI 서버 상태와 모델 설치 여부를 별도로 확인해야 하는 문제
 
-## Tech Stack
+## Tech Stack / 기술 스택
 
 | Area | Stack |
 | --- | --- |
@@ -63,7 +63,7 @@ FastAPI, Docker, nginx, Chart.js, Ollama를 조합해 만든 Linux 서버 실시
 | AI integration | Ollama local LLM API |
 | Monitoring | `/proc`, `/sys`, Docker socket |
 
-## Architecture
+## Architecture / 아키텍처
 
 ```text
 Browser
@@ -76,7 +76,7 @@ Browser
 
 FastAPI 앱과 nginx는 `network_mode: host`로 실행됩니다. Portainer가 `8000` 포트를 사용 중인 환경에서도 충돌하지 않도록 FastAPI 앱은 `18000` 포트에 바인딩하고, nginx는 외부 접속용 `8080` 포트를 사용합니다.
 
-## Current Runtime
+## Current Runtime / 현재 실행 환경
 
 현재 기본 실행 주소:
 
@@ -92,7 +92,7 @@ http://127.0.0.1:8080
 | FastAPI app | 18000 | Internal dashboard API |
 | Ollama | 11434 | Local LLM API |
 
-## Quick Start
+## Quick Start / 빠른 시작
 
 ```bash
 docker compose up -d --build
@@ -112,7 +112,7 @@ curl http://127.0.0.1:8080/api/metrics
 http://127.0.0.1:8080
 ```
 
-## Local Development
+## Local Development / 로컬 개발
 
 ```bash
 python3 -m venv .venv
@@ -134,7 +134,7 @@ linux-dashboard
 linux-dashboard --once --top 10
 ```
 
-## Docker Compose Notes
+## Docker Compose Notes / Docker Compose 참고사항
 
 핵심 설정:
 
@@ -164,7 +164,7 @@ upstream linux_dashboard_app {
 }
 ```
 
-## Ollama Integration
+## Ollama Integration / Ollama 연동
 
 Ollama API 확인:
 
@@ -180,7 +180,7 @@ ollama run qwen2.5-coder:14b
 
 대시보드는 `/api/ollama/status`로 서버와 모델 상태를 확인하고, `/api/ollama/analyze`에서 현재 CPU/RAM/Disk/Docker 상태를 Ollama에 전달해 짧은 한국어 분석 결과를 받습니다.
 
-## API
+## API / API 안내
 
 | Method | Endpoint | Description |
 | --- | --- | --- |
@@ -201,7 +201,7 @@ curl -X POST http://127.0.0.1:8080/api/ollama/analyze \
   -d '{}'
 ```
 
-## Validation
+## Validation / 검증
 
 ```bash
 python3 -m compileall src
@@ -218,13 +218,13 @@ Expected healthy signals:
 - `/api/ollama/status` reports `server_status: running`
 - `default_model_available` is `true` when `qwen2.5-coder:14b` is installed
 
-## Troubleshooting
+## Troubleshooting / 문제 해결
 
-### Port already in use
+### Port already in use / 포트가 이미 사용 중인 경우
 
 FastAPI는 `18000`, nginx는 `8080`을 사용합니다. 충돌이 있으면 `docker-compose.yml`과 `nginx/default.conf`를 함께 수정해야 합니다.
 
-### Ollama server offline
+### Ollama server offline / Ollama 서버가 꺼진 경우
 
 ```bash
 curl http://localhost:11434/api/tags
@@ -238,13 +238,13 @@ sudo systemctl start ollama
 sudo systemctl status ollama
 ```
 
-### Model not found
+### Model not found / 모델을 찾을 수 없는 경우
 
 ```bash
 ollama run qwen2.5-coder:14b
 ```
 
-### Docker status degraded
+### Docker status degraded / Docker 상태가 저하된 경우
 
 Docker socket 마운트와 권한을 확인합니다.
 
@@ -260,7 +260,7 @@ docker ps -a --filter status=exited
 docker rm <container_id>
 ```
 
-## Roadmap
+## Roadmap / 로드맵
 
 - AI 분석 결과 캐싱
 - 최근 분석 히스토리 저장
