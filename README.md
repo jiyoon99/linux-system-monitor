@@ -270,3 +270,7 @@ docker rm <container_id>
 - WebSocket 기반 push 업데이트
 - GitHub Actions 테스트 범위 확대
 - 운영 서버 배포 예제 추가
+
+## License / 라이선스
+
+MIT License. 자세한 내용은 [LICENSE](LICENSE)를 참고하세요.
