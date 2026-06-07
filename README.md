@@ -6,7 +6,11 @@ FastAPI, Docker, nginx, Chart.js, Ollama를 조합해 만든 Linux 서버 실시
 
 ![Dashboard screenshot](docs/screenshots/dashboard.png)
 
-## Project Highlights / 프로젝트 핵심
+## What I Built / 만든 것
+
+호스트의 CPU, 메모리, 디스크, 네트워크와 Docker 런타임 상태를 수집해 웹과 CLI에서 확인할 수 있는 모니터링 도구를 만들었습니다. 수집된 수치를 그대로 나열하는 데서 끝내지 않고 Server Bot이 임계치와 중지된 컨테이너를 검사해 `OK`, `WARN`, `FAIL` 상태로 요약하며, 필요할 때 Ollama가 현재 상태를 한국어로 분석합니다.
+
+## Main Features / 주요 기능
 
 - 실시간 CPU, RAM, Disk, Network 모니터링
 - Chart.js 기반 CPU/RAM/Network 히스토리 그래프
@@ -23,35 +27,15 @@ FastAPI, Docker, nginx, Chart.js, Ollama를 조합해 만든 Linux 서버 실시
 - 다크 테마 반응형 UI
 - 웹 대시보드와 CLI 동시 지원
 
-## For Interviewers / 면접관 참고
+## Development / 개발 방식
 
-이 저장소는 Linux 서버 상태를 "명령어 여러 개"가 아니라 하나의 운영 화면에서 판단하도록 만든 프로젝트입니다.
-
-| 평가 포인트 | 확인 위치 |
-| --- | --- |
-| Linux metrics 수집 | `src/linux_dashboard/metrics.py`, `/proc`, `/sys`, disk/network 정보 |
-| Docker 운영 상태 확인 | Docker socket mount, container/image 상태 API |
-| 웹 서비스 구성 | FastAPI app, nginx reverse proxy, Docker Compose |
-| 운영 판단 로직 | Server Bot `OK`/`WARN`/`FAIL` 리포트 |
-| AI 연동 | Ollama 상태 확인과 현재 시스템 상태 분석 API |
-
-면접에서 설명할 수 있는 핵심은 다음과 같습니다.
-
-- 컨테이너 안에서 호스트의 `/proc`, `/sys`, Docker socket을 읽을 때 어떤 권한과 mount가 필요한지
-- 단순 수치 표시와 운영자가 바로 판단할 수 있는 alert/report의 차이
-- nginx를 앞에 두고 FastAPI 앱을 내부 포트로 분리한 이유
-- Ollama가 느리거나 꺼져 있을 때 대시보드 전체가 멈추지 않도록 상태 API를 나눈 방식
-
-## Why I Built This / 제작 배경
-
-개인 Linux 개발 환경에서 Docker, Ollama, 시스템 리소스 상태를 매번 여러 명령어로 확인하는 불편함을 줄이기 위해 만들었습니다.
-
-이 프로젝트는 다음 문제를 해결합니다.
-
-- `docker ps`, `free`, `df`, `top`, `curl localhost:11434`를 각각 실행해야 하는 번거로움
-- 컨테이너가 중지돼도 바로 알아차리기 어려운 문제
-- 리소스 수치만 보고 판단해야 하는 운영 피로도
-- 로컬 AI 서버 상태와 모델 설치 여부를 별도로 확인해야 하는 문제
+- Linux metrics 수집을 별도 모듈로 분리해 CLI와 FastAPI가 같은 snapshot을 사용합니다.
+- 컨테이너 실행 시 호스트의 `/proc`, `/sys`, root filesystem을 읽기 전용으로 마운트합니다.
+- Docker 상태는 `/var/run/docker.sock`을 읽기 전용으로 연결해 daemon, container, image 정보를 조회합니다.
+- 현재값과 history를 분리해 API가 Chart.js 그래프에 필요한 시계열을 제공합니다.
+- Server Bot은 수집 계층과 분리된 규칙으로 CPU, RAM, disk 임계치와 중지 컨테이너를 판정합니다.
+- Ollama 상태 확인과 분석 요청을 별도 endpoint로 분리해 AI 서버가 꺼져 있어도 기본 모니터링은 계속 동작합니다.
+- nginx가 외부 `8080` 요청을 받고 FastAPI는 내부 `18000`에서 동작하도록 실행 경계를 나눴습니다.
 
 ## Tech Stack / 기술 스택
 
@@ -259,17 +243,6 @@ volumes:
 docker ps -a --filter status=exited
 docker rm <container_id>
 ```
-
-## Roadmap / 로드맵
-
-- AI 분석 결과 캐싱
-- 최근 분석 히스토리 저장
-- Server Bot alert acknowledge 기능
-- 컨테이너별 CPU/RAM 상세 모니터링
-- Prometheus/Grafana export endpoint
-- WebSocket 기반 push 업데이트
-- GitHub Actions 테스트 범위 확대
-- 운영 서버 배포 예제 추가
 
 ## License / 라이선스
 
